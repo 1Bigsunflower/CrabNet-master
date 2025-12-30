@@ -175,6 +175,11 @@ if __name__ == '__main__':
     print(f"  test : {len(test_df)}")
     print(f"  total: {len(df)}")
 
+    print("\n训练集示例（前五行）：")
+    print(train_df.head())
+
+    print("\n测试集示例 (前 5 行)：")
+    print(test_df.head())
     # ===============================
     # 3️⃣ 保存数据（val.csv 不再使用）
     # ===============================
