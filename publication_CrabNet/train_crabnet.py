@@ -44,7 +44,7 @@ def get_model(data_dir, mat_prop, classification=False, batch_size=None,
         model.classification = True
 
     train_data = f'{data_dir}/{mat_prop}/train.csv'
-    val_data = f'{data_dir}/{mat_prop}/val.csv'
+    val_data = f'{data_dir}/{mat_prop}/test.csv'  # 用测试集作为验证数据
 
     data_size = pd.read_csv(train_data).shape[0]
     batch_size = 2 ** round(np.log2(data_size) - 4)
@@ -164,33 +164,24 @@ if __name__ == '__main__':
     )
 
     # ===============================
-    # 2️⃣ 标准三折划分（70 / 15 / 15）
-    # 与 XGBoost 完全一致
+    # 2️⃣ 随机划分：训练集 70% / 测试集 30%
     # ===============================
-    train_val_df, test_df = train_test_split(
-        df, test_size=0.15, random_state=42
-    )
-
-    train_df, val_df = train_test_split(
-        train_val_df,
-        test_size=0.15 / 0.85,
-        random_state=42
+    train_df, test_df = train_test_split(
+        df, test_size=0.3, random_state=42
     )
 
     print("数据集大小：")
     print(f"  train: {len(train_df)}")
-    print(f"  val  : {len(val_df)}")
     print(f"  test : {len(test_df)}")
     print(f"  total: {len(df)}")
 
     # ===============================
-    # 3️⃣ 保存为 CrabNet 所需格式
+    # 3️⃣ 保存数据（val.csv 不再使用）
     # ===============================
     base_dir = Path("data/m_data/property")
     base_dir.mkdir(parents=True, exist_ok=True)
 
     train_df.to_csv(base_dir / "train.csv", index=False)
-    val_df.to_csv(base_dir / "val.csv", index=False)
     test_df.to_csv(base_dir / "test.csv", index=False)
 
     # ===============================
@@ -207,6 +198,5 @@ if __name__ == '__main__':
 
     print('=' * 50)
     save_results(data_dir, mat_prop, classification, 'train.csv', verbose=False)
-    save_results(data_dir, mat_prop, classification, 'val.csv', verbose=False)
     save_results(data_dir, mat_prop, classification, 'test.csv', verbose=False)
     print('=' * 50)
