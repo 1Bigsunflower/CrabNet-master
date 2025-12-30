@@ -199,3 +199,4 @@ if __name__ == '__main__':
     save_results(data_dir, mat_prop, classification, 'val.csv', verbose=False)
     save_results(data_dir, mat_prop, classification, 'test.csv', verbose=False)
     print('=' * 50)
+#train/val/train
