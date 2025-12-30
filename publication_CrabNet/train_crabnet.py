@@ -1,3 +1,5 @@
+# coding: utf-8
+
 import os
 import re
 import numpy as np
@@ -118,9 +120,12 @@ def save_results(data_dir, mat_prop, classification, file_name, verbose=True):
         "MSE": mse,
         "RMSE": rmse,
         "R2": r2
-    }]).to_csv(metrics_path, mode='a',
-               header=not os.path.exists(metrics_path),
-               index=False)
+    }]).to_csv(
+        metrics_path,
+        mode='a',
+        header=not os.path.exists(metrics_path),
+        index=False
+    )
 
     return mae, mse, rmse, r2
 
@@ -135,7 +140,7 @@ def frac_to_decimal_in_formula(formula, ndigits=2):
     pattern = r'([A-Z][a-z]?)(\d+)\s*/\s*(\d+)'
 
     def repl(m):
-        return f"{m.group(1)}{round(float(m.group(2))/float(m.group(3)), ndigits)}"
+        return f"{m.group(1)}{round(float(m.group(2)) / float(m.group(3)), ndigits)}"
 
     return re.sub(pattern, repl, formula)
 
@@ -145,7 +150,9 @@ def frac_to_decimal_in_formula(formula, ndigits=2):
 # ===============================
 if __name__ == '__main__':
 
-    # 读取并清洗数据
+    # ===============================
+    # 1️⃣ 读取并清洗数据
+    # ===============================
     df = pd.read_excel("../北科大/data/分子式.xls")
     df = df[["formula", "target"]]
 
@@ -157,7 +164,8 @@ if __name__ == '__main__':
     )
 
     # ===============================
-    # 标准三折划分 70 / 15 / 15
+    # 2️⃣ 标准三折划分（70 / 15 / 15）
+    # 与 XGBoost 完全一致
     # ===============================
     train_val_df, test_df = train_test_split(
         df, test_size=0.15, random_state=42
@@ -173,8 +181,11 @@ if __name__ == '__main__':
     print(f"  train: {len(train_df)}")
     print(f"  val  : {len(val_df)}")
     print(f"  test : {len(test_df)}")
+    print(f"  total: {len(df)}")
 
-    # 保存数据
+    # ===============================
+    # 3️⃣ 保存为 CrabNet 所需格式
+    # ===============================
     base_dir = Path("data/m_data/property")
     base_dir.mkdir(parents=True, exist_ok=True)
 
@@ -183,7 +194,7 @@ if __name__ == '__main__':
     test_df.to_csv(base_dir / "test.csv", index=False)
 
     # ===============================
-    # 训练与评估
+    # 4️⃣ 训练与评估
     # ===============================
     data_dir = 'data/m_data'
     mat_prop = 'property'
@@ -199,4 +210,3 @@ if __name__ == '__main__':
     save_results(data_dir, mat_prop, classification, 'val.csv', verbose=False)
     save_results(data_dir, mat_prop, classification, 'test.csv', verbose=False)
     print('=' * 50)
-#train/val/train
