@@ -27,6 +27,39 @@ np.random.seed(RNG_SEED)
 # ===============================
 # 模型训练
 # ===============================
+# def get_model(data_dir, mat_prop, classification=False, batch_size=None,
+#               transfer=None, verbose=True):
+#
+#     model = Model(
+#         CrabNet(compute_device=compute_device).to(compute_device),
+#         model_name=f'{mat_prop}',
+#         verbose=verbose
+#     )
+#
+#     if transfer is not None:
+#         model.load_network(f'{transfer}.pth')
+#         model.model_name = f'{mat_prop}'
+#
+#     if classification:
+#         model.classification = True
+#
+#     train_data = f'{data_dir}/{mat_prop}/train.csv'
+#     val_data = f'{data_dir}/{mat_prop}/test.csv'
+#
+#     data_size = pd.read_csv(train_data).shape[0]
+#     batch_size = 2 ** round(np.log2(data_size) - 4)
+#     batch_size = min(max(batch_size, 2**7), 2**12)
+#
+#     # ✅ 只加载训练集
+#     model.load_data(train_data, batch_size=batch_size, train=True)
+#     model.load_data(val_data, batch_size=batch_size, train=False)
+#     print(f'training with batchsize {model.batch_size}')
+#
+#     # ✅ 训练时不再有验证集
+#     model.fit(epochs=500, losscurve=False)
+#     model.save_network()
+#
+#     return model
 def get_model(data_dir, mat_prop, classification=False, batch_size=None,
               transfer=None, verbose=True):
 
@@ -44,22 +77,22 @@ def get_model(data_dir, mat_prop, classification=False, batch_size=None,
         model.classification = True
 
     train_data = f'{data_dir}/{mat_prop}/train.csv'
-    val_data = f'{data_dir}/{mat_prop}/test.csv'
 
+    # ====== batch size 计算（原样保留）======
     data_size = pd.read_csv(train_data).shape[0]
     batch_size = 2 ** round(np.log2(data_size) - 4)
     batch_size = min(max(batch_size, 2**7), 2**12)
 
-    # ✅ 只加载训练集
+    # ✅ 只加载训练集（关键）
     model.load_data(train_data, batch_size=batch_size, train=True)
-    model.load_data(val_data, batch_size=batch_size, train=False)
     print(f'training with batchsize {model.batch_size}')
 
-    # ✅ 训练时不再有验证集
+    # ✅ 训练过程中不再存在任何 val / test
     model.fit(epochs=500, losscurve=False)
-    model.save_network()
 
+    model.save_network()
     return model
+
 
 
 
@@ -209,5 +242,8 @@ if __name__ == '__main__':
     save_results(data_dir, mat_prop, classification, 'train.csv', verbose=False)
     save_results(data_dir, mat_prop, classification, 'test.csv', verbose=False)
     print('=' * 50)
+
+
+# coding: utf-8
 
 
