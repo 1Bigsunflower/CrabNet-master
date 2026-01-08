@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="596828ba-9c31-4ed3-87d7-0a20b6cc2aae" name="toussaint">
+        <fileTransfer rootFolder="/home/ubuntu/cht_article/crab" accessType="SFTP" host="211.82.104.144" port="2222" sshConfigId="15921e2a-24b3-48f4-92d2-b7d76fa6ec50" sshConfig="ubuntu@211.82.104.144:2222 password">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" keepAliveTimeout="0" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>

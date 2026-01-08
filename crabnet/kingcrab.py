@@ -1,3 +1,5 @@
+import sys
+
 import numpy as np
 import pandas as pd
 
@@ -51,14 +53,15 @@ class ResidualNetwork(nn.Module):
 class Embedder(nn.Module):
     def __init__(self,
                  d_model,
-                 compute_device=None):
+                 compute_device=None,
+                 embedding_dir='mat2vec'):
         super().__init__()
         self.d_model = d_model
         self.compute_device = compute_device
 
         elem_dir = 'data/element_properties'
         # # Choose what element information the model receives
-        mat2vec = f'{elem_dir}/mat2vec.csv'  # element embedding
+        mat2vec = f'{elem_dir}/{embedding_dir}.csv'  # element embedding
         # mat2vec = f'{elem_dir}/onehot.csv'  # onehot encoding (atomic number)
         # mat2vec = f'{elem_dir}/random_200.csv'  # random vec for elements
 
@@ -134,7 +137,8 @@ class Encoder(nn.Module):
                  heads,
                  frac=False,
                  attn=True,
-                 compute_device=None):
+                 compute_device=None,
+                 embedding_dir='mat2vec'):
         super().__init__()
         self.d_model = d_model
         self.N = N
@@ -143,7 +147,9 @@ class Encoder(nn.Module):
         self.attention = attn
         self.compute_device = compute_device
         self.embed = Embedder(d_model=self.d_model,
-                              compute_device=self.compute_device)
+                              compute_device=self.compute_device,
+                              embedding_dir=embedding_dir
+                              )
         self.pe = FractionalEncoder(self.d_model, resolution=5000, log10=False)
         self.ple = FractionalEncoder(self.d_model, resolution=5000, log10=True)
 
@@ -198,7 +204,8 @@ class CrabNet(nn.Module):
                  N=3,
                  heads=4,
                  compute_device=None,
-                 residual_nn='roost'):
+                 residual_nn='roost',
+                 embedding_dir='mat2vec'):
         super().__init__()
         self.avg = True
         self.out_dims = out_dims
@@ -209,7 +216,8 @@ class CrabNet(nn.Module):
         self.encoder = Encoder(d_model=self.d_model,
                                N=self.N,
                                heads=self.heads,
-                               compute_device=self.compute_device)
+                               compute_device=self.compute_device,
+                               embedding_dir=embedding_dir)
         if residual_nn == 'roost':
             # use the Roost residual network
             self.out_hidden = [1024, 512, 256, 128]

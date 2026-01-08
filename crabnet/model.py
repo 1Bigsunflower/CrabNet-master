@@ -68,7 +68,9 @@ class Model():
                                      inference=inference,
                                      verbose=self.verbose,
                                      drop_unary=self.drop_unary,
-                                     scale=self.scale)
+                                     scale=self.scale,
+                                     pin_memory=torch.cuda.is_available()
+                                     )
         print(f'loading data with up to {data_loaders.n_elements:0.0f} '
               f'elements in the formula')
 

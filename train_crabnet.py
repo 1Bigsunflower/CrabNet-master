@@ -1,7 +1,9 @@
 # coding: utf-8
-
+import argparse
 import os
 import re
+import warnings
+
 import numpy as np
 import pandas as pd
 import torch
@@ -13,7 +15,15 @@ from sklearn.metrics import roc_auc_score, mean_absolute_error, mean_squared_err
 from crabnet.kingcrab import CrabNet
 from crabnet.model import Model
 from utils.get_compute_device import get_compute_device
-
+parser = argparse.ArgumentParser(description='')
+parser.add_argument('--emb_method', default='mat2vec', type=str,
+                    # choices=['mat2vec', 'FCC', 'BCC', 'SC',' DMD', 'X2O','X2O3','X2O5','XO','XO2','XO3'],
+                    help='embedding methods to use')
+args = parser.parse_args()
+torch.set_printoptions(threshold=torch.inf)
+torch.set_printoptions(sci_mode=False)
+warnings.filterwarnings("ignore",
+    message="enable_nested_tensor is True, but self.use_nested_tensor is False")
 
 # ===============================
 # 全局设置
@@ -24,49 +34,16 @@ torch.manual_seed(RNG_SEED)
 np.random.seed(RNG_SEED)
 
 
-# ===============================
-# 模型训练
-# ===============================
-# def get_model(data_dir, mat_prop, classification=False, batch_size=None,
-#               transfer=None, verbose=True):
-#
-#     model = Model(
-#         CrabNet(compute_device=compute_device).to(compute_device),
-#         model_name=f'{mat_prop}',
-#         verbose=verbose
-#     )
-#
-#     if transfer is not None:
-#         model.load_network(f'{transfer}.pth')
-#         model.model_name = f'{mat_prop}'
-#
-#     if classification:
-#         model.classification = True
-#
-#     train_data = f'{data_dir}/{mat_prop}/train.csv'
-#     val_data = f'{data_dir}/{mat_prop}/test.csv'
-#
-#     data_size = pd.read_csv(train_data).shape[0]
-#     batch_size = 2 ** round(np.log2(data_size) - 4)
-#     batch_size = min(max(batch_size, 2**7), 2**12)
-#
-#     # ✅ 只加载训练集
-#     model.load_data(train_data, batch_size=batch_size, train=True)
-#     model.load_data(val_data, batch_size=batch_size, train=False)
-#     print(f'training with batchsize {model.batch_size}')
-#
-#     # ✅ 训练时不再有验证集
-#     model.fit(epochs=500, losscurve=False)
-#     model.save_network()
-#
-#     return model
 def get_model(data_dir, mat_prop, classification=False, batch_size=None,
-              transfer=None, verbose=True):
+              transfer=None, verbose=True, embedding_dir='mat2vec'):
 
     model = Model(
-        CrabNet(compute_device=compute_device).to(compute_device),
+        CrabNet(
+            compute_device=compute_device,
+            embedding_dir=embedding_dir
+        ).to(compute_device,),
         model_name=f'{mat_prop}',
-        verbose=verbose
+        verbose=verbose,
     )
 
     if transfer is not None:
@@ -83,17 +60,16 @@ def get_model(data_dir, mat_prop, classification=False, batch_size=None,
     batch_size = 2 ** round(np.log2(data_size) - 4)
     batch_size = min(max(batch_size, 2**7), 2**12)
 
-    # ✅ 只加载训练集（关键）
+    # df = pd.read_csv(train_data)
+    # print(df.head(2))
+
     model.load_data(train_data, batch_size=batch_size, train=True)
     print(f'training with batchsize {model.batch_size}')
 
-    # ✅ 训练过程中不再存在任何 val / test
     model.fit(epochs=500, losscurve=False)
 
     model.save_network()
     return model
-
-
 
 
 # ===============================
@@ -109,11 +85,22 @@ def to_csv(output, save_name):
 
 def load_model(data_dir, mat_prop, classification, file_name, verbose=True):
     model = Model(
-        CrabNet(compute_device=compute_device).to(compute_device),
-        model_name=f'{mat_prop}',
+        CrabNet(compute_device=compute_device,
+                embedding_dir=args.emb_method
+                ).to(compute_device),
+        # model_name=f'{mat_prop}',
         verbose=verbose
     )
-    model.load_network(f'{mat_prop}.pth')
+    import os
+    # print("当前工作目录:", os.getcwd())
+    # ⭐ 构造模型路径
+    model_path = os.path.join('models', 'trained_models', f"{mat_prop}.pth")
+    # print("模型查找路径:", model_path)
+
+    # ⭐ 检查是否存在
+    if not os.path.exists(model_path):
+        raise FileNotFoundError(f"未找到模型文件: {model_path}")
+    model.load_network(f"{mat_prop}.pth")
 
     if classification:
         model.classification = True
@@ -182,14 +169,8 @@ def frac_to_decimal_in_formula(formula, ndigits=2):
     return re.sub(pattern, repl, formula)
 
 
-# ===============================
-# 主程序
-# ===============================
 if __name__ == '__main__':
 
-    # ===============================
-    # 1️⃣ 读取并清洗数据
-    # ===============================
     df = pd.read_excel("Unfiltered.xlsx")
     df = df[["formula", "target"]]
 
@@ -200,44 +181,27 @@ if __name__ == '__main__':
         .apply(frac_to_decimal_in_formula)
     )
 
-    # ===============================
-    # 2️⃣ 随机划分：训练集 70% / 测试集 30%
-    # ===============================
     train_df, test_df = train_test_split(
         df, test_size=0.3, random_state=42
     )
 
-    print("数据集大小：")
-    print(f"  train: {len(train_df)}")
-    print(f"  test : {len(test_df)}")
-    print(f"  total: {len(df)}")
+    data_dir = 'data/m_data'
+    classification = False
+    train = True
 
-    print("\n训练集示例（前五行）：")
-    print(train_df.head())
-
-    print("\n测试集示例 (前 5 行)：")
-    print(test_df.head())
-    # ===============================
-    # 3️⃣ 保存数据（val.csv 不再使用）
-    # ===============================
-    base_dir = Path("data/m_data/property")
+    mat_prop = f'property_{args.emb_method}'
+    model_file = f'models/trained_models/{mat_prop}.pth'
+    base_dir = Path(f"data/m_data/{mat_prop}")
     base_dir.mkdir(parents=True, exist_ok=True)
 
     train_df.to_csv(base_dir / "train.csv", index=False)
     test_df.to_csv(base_dir / "test.csv", index=False)
-
-    # ===============================
-    # 4️⃣ 训练与评估
-    # ===============================
-    data_dir = 'data/m_data'
-    mat_prop = 'property'
-    classification = False
-    train = True
-
+    if os.path.exists(model_file):
+        print(f"删除旧的模型文件: {model_file}")
+        os.remove(model_file)
     if train:
         print(f'Property "{mat_prop}" selected for training')
-        get_model(data_dir, mat_prop, classification)
-
+        get_model(data_dir, mat_prop, classification, embedding_dir=f'{args.emb_method}')
     print('=' * 50)
     save_results(data_dir, mat_prop, classification, 'train.csv', verbose=False)
     save_results(data_dir, mat_prop, classification, 'test.csv', verbose=False)
@@ -245,5 +209,5 @@ if __name__ == '__main__':
 
 
 # coding: utf-8
-
-
+# mat2vec 0.4414
+# 0.5227
