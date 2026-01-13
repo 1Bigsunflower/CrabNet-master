@@ -1,5 +1,6 @@
 import os
 import gc
+import sys
 
 import pandas as pd
 import numpy as np
@@ -522,7 +523,7 @@ def get_edm(path, elem_prop='mat2vec', n_elements='infer',
     if drop_unary:
         df = df[df['count'] != 1]  # drop pure elements
     if not inference:
-        df = df.groupby(by='formula').mean().reset_index()  # mean of duplicates
+        df = df.groupby(by='formula').mean(numeric_only=True).reset_index()  # mean of duplicates
 
     list_ohm = [OrderedDict(_element_composition(form))
                 for form in df['formula']]

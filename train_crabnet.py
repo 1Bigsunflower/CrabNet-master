@@ -1,3 +1,4 @@
+import argparse
 import os
 import numpy as np
 import pandas as pd
@@ -14,12 +15,21 @@ RNG_SEED = 42
 torch.manual_seed(RNG_SEED)
 np.random.seed(RNG_SEED)
 
-
+parser = argparse.ArgumentParser(description='')
+parser.add_argument('--emb_method', default='mat2vec', type=str,
+                    # choices=['mat2vec', 'FCC', 'BCC', 'SC',' DMD', 'X2O','X2O3','X2O5','XO','XO2','XO3'],
+                    help='embedding methods to use')
+parser.add_argument('--subset', default='matbench_jdft2d', type=str,
+                    choices=['matbench_jdft2d', 'matbench_phonons', 'matbench_dielectric', 'matbench_log_gvrh', 'matbench_log_kvrh', 'matbench_perovskites', 'matbench_mp_gap', 'matbench_mp_e_form'],
+                    help='subset dataset to use')
+parser.add_argument('--fold', type=int, default=0, help='number of fold')
+args = parser.parse_args()
 # %%
 def get_model(data_dir, mat_prop, classification=False, batch_size=None,
-              transfer=None, verbose=True):
+              transfer=None, verbose=True, embedding_dir='mat2vec'):
     # Get the TorchedCrabNet architecture loaded
-    model = Model(CrabNet(compute_device=compute_device).to(compute_device),
+    model = Model(CrabNet(compute_device=compute_device,
+                          embedding_dir=embedding_dir).to(compute_device),
                   model_name=f'{mat_prop}', verbose=verbose)
 
     # Train network starting at pretrained weights
@@ -52,7 +62,7 @@ def get_model(data_dir, mat_prop, classification=False, batch_size=None,
     model.load_data(val_data, batch_size=batch_size)
 
     # Set the number of epochs, decide if you want a loss curve to be plotted
-    model.fit(epochs=40, losscurve=False)
+    model.fit(epochs=40, losscurve=False)  # 40
 
     # Save the network (saved as f"{model_name}.pth")
     model.save_network()
@@ -69,9 +79,11 @@ def to_csv(output, save_name):
     df.to_csv(f'{save_path}/{save_name}', index_label='Index')
 
 
-def load_model(data_dir, mat_prop, classification, file_name, verbose=True):
+def load_model(data_dir, mat_prop, classification, file_name, verbose=True, embedding_dir='mat2vec'):
     # Load up a saved network.
-    model = Model(CrabNet(compute_device=compute_device).to(compute_device),
+    model = Model(CrabNet(compute_device=compute_device,
+                          embedding_dir=embedding_dir
+                          ).to(compute_device),
                   model_name=f'{mat_prop}', verbose=verbose)
     model.load_network(f'{mat_prop}.pth')
 
