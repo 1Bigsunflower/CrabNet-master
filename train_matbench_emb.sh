@@ -6,11 +6,13 @@ OUTDIR="matbench_test"
 mkdir -p ${OUTDIR}
 
 emb_list=(
-    # "mat2vec"
-#    "all_6_classical_mds_32d_zscore"
-#    "all_6_classical_mds_64d_zscore"
-#    "all_6_mds_32d_zscore"
-#    "all_6_mds_64d_zscore"
+    "mat2vec"
+
+    "all_6_classical_mds_32d_zscore"
+    "all_6_classical_mds_64d_zscore"
+    "all_6_mds_32d_zscore"
+    "all_6_mds_64d_zscore"
+
     "all6_CMDS_32d_cos_l2_zscore"
     "all6_CMDS_64d_cos_l2_zscore"
     "all6_MDS_32d_cos_l2_zscore"
@@ -25,8 +27,10 @@ subset_list=(
 #    "matbench_log_gvrh"
 #    "matbench_log_kvrh"
 #    "matbench_perovskites"
-      "matbench_steels"
-      "matbench_expt_gap"
+#      "matbench_steels"
+#      "matbench_expt_gap"
+    "matbench_expt_is_metal"
+    "matbench_glass"
 )
 
 for subset in "${subset_list[@]}"; do

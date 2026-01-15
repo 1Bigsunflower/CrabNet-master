@@ -4,62 +4,108 @@ import numpy as np
 import pandas as pd
 
 LOG_DIR = "matbench_test"
-subset = "matbench_jdft2d"
 
+subset_list = [
+    # "matbench_jdft2d",
+    # "matbench_phonons",
+    # "matbench_dielectric",
+    # "matbench_log_gvrh",
+    # "matbench_log_kvrh",
+    # "matbench_perovskites",
+    "matbench_steels",
+    "matbench_expt_gap",
+    "matbench_expt_is_metal",
+    "matbench_glass",
+]
+TASK_TYPE = {
+    # "matbench_jdft2d": "regression",
+    # "matbench_phonons": "regression",
+    # "matbench_dielectric": "regression",
+    # "matbench_log_gvrh": "regression",
+    # "matbench_log_kvrh": "regression",
+    # "matbench_perovskites": "regression",
+
+    "matbench_steels": "regression",
+    "matbench_expt_gap": "regression",
+
+    "matbench_expt_is_metal": "classification",
+    "matbench_glass": "classification",
+}
 emb_list = [
     "mat2vec",
-    "classical_mds_32d",
-    "classical_mds_64d",
-    "mds_32d",
-    "mds_64d",
+
+    "all_6_classical_mds_32d_zscore",
+    "all_6_classical_mds_64d_zscore",
+    "all_6_mds_32d_zscore",
+    "all_6_mds_64d_zscore",
+
+    "all6_CMDS_32d_cos_l2_zscore",
+    "all6_CMDS_64d_cos_l2_zscore",
+    "all6_MDS_32d_cos_l2_zscore",
+    "all6_MDS_64d_cos_l2_zscore",
 ]
 
 folds = range(0, 5)
 
-# 正则：匹配 MAE = 52.07631894683838
+# 匹配 MAE = 52.07631894683838
 mae_pattern = re.compile(r"MAE\s*=\s*([0-9.+-Ee]+)")
+auc_pattern = re.compile(r"(ROC[-_ ]?AUC|AUC)\s*=\s*([0-9.+-Ee]+)")
 
-results = []
+rows = []
 
-for emb in emb_list:
-    row = []
-    for fold in folds:
-        log_name = f"crabnet_{subset}_{fold}_{emb}.log"
-        log_path = os.path.join(LOG_DIR, log_name)
+for subset in subset_list:
+    task_type = TASK_TYPE.get(subset)
+    if task_type is None:
+        raise ValueError(f"未知的 subset 类型: {subset}")
 
-        if not os.path.exists(log_path):
-            print(f"[WARN] 缺失日志: {log_path}")
-            row.append(np.nan)
-            continue
+    is_classification = task_type == "classification"
 
-        with open(log_path, "r", encoding="utf-8", errors="ignore") as f:
-            text = f.read()
+    for emb in emb_list:
+        fold_scores = []
 
-        match = mae_pattern.search(text)
-        if match:
-            mae = float(match.group(1))
-            mae = round(mae, 6)  # 保留6位
-        else:
-            print(f"[WARN] 未找到 MAE: {log_path}")
-            mae = np.nan
+        for fold in folds:
+            log_name = f"crabnet_{subset}_{fold}_{emb}.log"
+            log_path = os.path.join(LOG_DIR, log_name)
 
-        row.append(mae)
+            if not os.path.exists(log_path):
+                print(f"[WARN] 缺失日志: {log_path}")
+                fold_scores.append(np.nan)
+                continue
 
-    # 计算平均（忽略 nan）
-    avg = np.nanmean(row)
-    if not np.isnan(avg):
-        avg = round(avg, 6)
+            with open(log_path, "r", encoding="utf-8", errors="ignore") as f:
+                text = f.read()
 
-    row.append(avg)
+            if is_classification:
+                match = auc_pattern.search(text)
+                if match:
+                    score = round(float(match.group(2)), 6)
+                else:
+                    print(f"[WARN] 未找到 AUC: {log_path}")
+                    score = np.nan
+            else:
+                match = mae_pattern.search(text)
+                if match:
+                    score = round(float(match.group(1)), 6)
+                else:
+                    print(f"[WARN] 未找到 MAE: {log_path}")
+                    score = np.nan
 
-    results.append([emb] + row)
+            fold_scores.append(score)
 
-# 构建 DataFrame
-columns = ["emb_method"] + [f"fold_{f}" for f in folds] + ["avg_mae"]
-df = pd.DataFrame(results, columns=columns)
+        avg = np.nanmean(fold_scores)
+        if not np.isnan(avg):
+            avg = round(avg, 6)
 
-# 保存到 excel
-out_file = "matbench_jdft2d_mae_summary.xlsx"
+        metric_name = "auc" if is_classification else "mae"
+        rows.append([subset, emb] + fold_scores + [avg])
+
+    rows.append([np.nan] * (2 + len(folds) + 1))
+
+columns = ["subset", "emb_method"] + [f"fold_{f}" for f in folds] + ["avg_score"]
+
+df = pd.DataFrame(rows, columns=columns)
+
+out_file = "matbench_all_subset_mae_summary.xlsx"
 df.to_excel(out_file, index=False)
 
 print("Done. 保存到:", out_file)
