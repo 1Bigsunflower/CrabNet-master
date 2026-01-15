@@ -6,32 +6,47 @@ OUTDIR="matbench_test"
 mkdir -p ${OUTDIR}
 
 emb_list=(
-    "mat2vec"
-    "classical_mds_32d"
-    "classical_mds_64d"
-    "mds_32d"
-    "mds_64d"
+    # "mat2vec"
+#    "all_6_classical_mds_32d_zscore"
+#    "all_6_classical_mds_64d_zscore"
+#    "all_6_mds_32d_zscore"
+#    "all_6_mds_64d_zscore"
+    "all6_CMDS_32d_cos_l2_zscore"
+    "all6_CMDS_64d_cos_l2_zscore"
+    "all6_MDS_32d_cos_l2_zscore"
+    "all6_MDS_64d_cos_l2_zscore"
+
 )
 
-subset="matbench_jdft2d"
+subset_list=(
+    # "matbench_jdft2d"
+    # "matbench_phonons"
+#    "matbench_dielectric"
+#    "matbench_log_gvrh"
+#    "matbench_log_kvrh"
+#    "matbench_perovskites"
+      "matbench_steels"
+      "matbench_expt_gap"
+)
 
-for emb in "${emb_list[@]}"; do
-    for fold in {0..4}; do
+for subset in "${subset_list[@]}"; do
+    for emb in "${emb_list[@]}"; do
+        for fold in {0..4}; do
 
-        log_file="${OUTDIR}/crabnet_${subset}_${fold}_${emb}.log"
+            log_file="${OUTDIR}/crabnet_${subset}_${fold}_${emb}.log"
 
-        echo "Running: emb_method=${emb}, fold=${fold}, subset=${subset}"
-        echo "Log -> ${log_file}"
+            echo "Running: subset=${subset}, emb_method=${emb}, fold=${fold}"
+            echo "Log -> ${log_file}"
 
-        nohup python ${PYFILE} \
-            --emb_method "${emb}" \
-            --fold ${fold} \
-            --subset "${subset}" \
-            > "${log_file}" 2>&1
+            nohup python ${PYFILE} \
+                --emb_method "${emb}" \
+                --fold ${fold} \
+                --subset "${subset}" \
+                > "${log_file}" 2>&1
 
-
-        echo "Finished: ${log_file}"
-        echo "--------------------------------------"
+            echo "Finished: ${log_file}"
+            echo "--------------------------------------"
+        done
     done
 done
 

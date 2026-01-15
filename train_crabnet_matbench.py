@@ -14,7 +14,7 @@ parser.add_argument('--emb_method', default='mat2vec', type=str,
                     # choices=['mat2vec', 'FCC', 'BCC', 'SC',' DMD', 'X2O','X2O3','X2O5','XO','XO2','XO3'],
                     help='embedding methods to use')
 parser.add_argument('--subset', default='matbench_jdft2d', type=str,
-                    choices=['matbench_jdft2d', 'matbench_phonons', 'matbench_dielectric', 'matbench_log_gvrh', 'matbench_log_kvrh', 'matbench_perovskites', 'matbench_mp_gap', 'matbench_mp_e_form'],
+                    # choices=['matbench_jdft2d', 'matbench_phonons', 'matbench_dielectric', 'matbench_log_gvrh', 'matbench_log_kvrh', 'matbench_perovskites', 'matbench_mp_gap', 'matbench_mp_e_form'],
                     help='subset dataset to use')
 parser.add_argument('--fold', type=int, default=0, help='number of fold')
 args = parser.parse_args()
