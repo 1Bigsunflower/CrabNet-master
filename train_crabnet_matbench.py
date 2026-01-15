@@ -1,10 +1,12 @@
 import argparse
 import os
+import sys
+
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
 from matbench.bench import MatbenchBenchmark
-from sklearn.metrics import mean_absolute_error, mean_squared_error
+from sklearn.metrics import mean_absolute_error, mean_squared_error, roc_auc_score
 
 import train_crabnet
 from train_crabnet import get_model, load_model, get_results
@@ -14,7 +16,7 @@ parser.add_argument('--emb_method', default='mat2vec', type=str,
                     # choices=['mat2vec', 'FCC', 'BCC', 'SC',' DMD', 'X2O','X2O3','X2O5','XO','XO2','XO3'],
                     help='embedding methods to use')
 parser.add_argument('--subset', default='matbench_jdft2d', type=str,
-                    # choices=['matbench_jdft2d', 'matbench_phonons', 'matbench_dielectric', 'matbench_log_gvrh', 'matbench_log_kvrh', 'matbench_perovskites', 'matbench_mp_gap', 'matbench_mp_e_form'],
+                    # choices=['matbench_jdft2d', 'matbench_phonons', 'matbench_dielectric', 'matbench_log_gvrh', 'matbench_log_kvrh', 'matbench_perovskites', 'matbench_mp_gap', 'matbench_mp_e_form', 'matbench_glass'],
                     help='subset dataset to use')
 parser.add_argument('--fold', type=int, default=0, help='number of fold')
 args = parser.parse_args()
@@ -84,6 +86,10 @@ if __name__ == '__main__':
 
     for task in mb.tasks:
         task.load()
+
+        task_type = task.metadata.task_type
+        is_classification = task_type == "classification"
+
         fold = args.fold
         mat_prop = f'{task.dataset_name}_fold{fold}_{args.emb_method}'
         os.makedirs(f'{data_dir}/{mat_prop}', exist_ok=True)
@@ -106,22 +112,29 @@ if __name__ == '__main__':
         output_df.to_csv(f'{data_dir}/{mat_prop}/test.csv')
 
         # Training CrabNet
-        model = get_model(data_dir, mat_prop, classification=False, verbose=True, embedding_dir=f'{args.emb_method}'
+        model = get_model(data_dir, mat_prop, classification=is_classification, verbose=True, embedding_dir=f'{args.emb_method}'
                           # drop_unary=False
                           )
 
         # Predicting on the testing data
-        model = load_model(data_dir, mat_prop, classification=False, file_name='test.csv', verbose=True, embedding_dir=f'{args.emb_method}'
+        model = load_model(data_dir, mat_prop, classification=is_classification, file_name='test.csv', verbose=True, embedding_dir=f'{args.emb_method}'
                            # drop_unary=False
                            )
         model, output = get_results(model)
         y_tar = output[0]
         y_pre = output[1]
-        mae = mean_absolute_error(y_tar, y_pre)
-        mse = mean_squared_error(y_tar, y_pre)
 
-        print("MAE =", mae)
-        print("MSE =", mse)
+        if is_classification:
+            auc = roc_auc_score(y_tar, y_pre)
+            print("ROC-AUC =", auc)
+        else:
+            mae = mean_absolute_error(y_tar, y_pre)
+            mse = mean_squared_error(y_tar, y_pre)
+
+            print("MAE =", mae)
+            print("MSE =", mse)
+
+
 # mat2vec 34.56646242469373
 
 # classical
