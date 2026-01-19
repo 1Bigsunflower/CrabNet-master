@@ -62,7 +62,7 @@ def get_model(data_dir, mat_prop, classification=False, batch_size=None,
     model.load_data(val_data, batch_size=batch_size)
 
     # Set the number of epochs, decide if you want a loss curve to be plotted
-    model.fit(epochs=40, losscurve=False)  # 40
+    model.fit(epochs=500, losscurve=False)  # 40
 
     # Save the network (saved as f"{model_name}.pth")
     model.save_network()

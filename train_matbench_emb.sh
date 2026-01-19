@@ -1,12 +1,13 @@
 #!/bin/bash
 
 PYFILE="train_crabnet_matbench.py"
-OUTDIR="matbench_test"
+OUTDIR="matbench_composition_test"
 
 mkdir -p ${OUTDIR}
 
 emb_list=(
-    # "mat2vec"
+    "mat2vec"
+
     "CMDS_32_cos_zscore"
     "CMDS_32_euc_zscore"
     "CMDS_64_cos_zscore"
