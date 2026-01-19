@@ -6,17 +6,24 @@ OUTDIR="matbench_test"
 mkdir -p ${OUTDIR}
 
 emb_list=(
-    "mat2vec"
-
-    "all_6_classical_mds_32d_zscore"
-    "all_6_classical_mds_64d_zscore"
-    "all_6_mds_32d_zscore"
-    "all_6_mds_64d_zscore"
-
-    "all6_CMDS_32d_cos_l2_zscore"
-    "all6_CMDS_64d_cos_l2_zscore"
-    "all6_MDS_32d_cos_l2_zscore"
-    "all6_MDS_64d_cos_l2_zscore"
+    # "mat2vec"
+    "CMDS_32_cos_zscore"
+    "CMDS_32_euc_zscore"
+    "CMDS_64_cos_zscore"
+    "CMDS_64_euc_zscore"
+    "MDS_32_cos_zscore"
+    "MDS_32_euc_zscore"
+    "MDS_64_cos_zscore"
+    "MDS_64_euc_zscore"
+#    "all_6_classical_mds_32d_zscore"
+#    "all_6_classical_mds_64d_zscore"
+#    "all_6_mds_32d_zscore"
+#    "all_6_mds_64d_zscore"
+#
+#    "all6_CMDS_32d_cos_l2_zscore"
+#    "all6_CMDS_64d_cos_l2_zscore"
+#    "all6_MDS_32d_cos_l2_zscore"
+#    "all6_MDS_64d_cos_l2_zscore"
 
 )
 
@@ -27,10 +34,10 @@ subset_list=(
 #    "matbench_log_gvrh"
 #    "matbench_log_kvrh"
 #    "matbench_perovskites"
-#      "matbench_steels"
-#      "matbench_expt_gap"
-    "matbench_expt_is_metal"
-    "matbench_glass"
+      "matbench_steels"
+      "matbench_expt_gap"
+      "matbench_expt_is_metal"
+      "matbench_glass"
 )
 
 for subset in "${subset_list[@]}"; do
